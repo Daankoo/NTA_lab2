@@ -1,0 +1,193 @@
+#include "header.hpp"
+
+uint64_t gcd(uint64_t a, uint64_t b) {
+	while (b != 0) { // a = q*b + r
+		uint64_t q = a / b;
+		uint64_t r = a % b;
+
+		a = b;
+		b = r;
+	}
+
+	return a;
+}
+
+uint64_t mul_mod(uint64_t a, uint64_t b, uint64_t n) {
+	uint64_t result = 0;
+	a %= n;
+
+	while (b > 0) {
+		if (b % 2 == 1)
+			result = (result + a) % n;
+
+		a = (a + a) % n;
+		b /= 2;
+	}
+
+	return result;
+}
+
+uint64_t mod_step(uint64_t a, uint64_t b, uint64_t n) {
+
+	uint64_t c = 1;
+	a %= n;
+
+	while (b > 0) {
+		if (b % 2 == 1) {
+			c = mul_mod(c, a, n);
+		}
+		a = mul_mod(a, a, n);
+		b /= 2;
+	}
+	return c;
+}
+
+void step2(uint64_t p, uint64_t& d, uint64_t& s) {
+	d = 1;
+	s = 0;
+	uint64_t p_1 = p - 1;
+
+	while (p_1 % 2 == 0) {
+		p_1 /= 2;
+		s += 1;
+	}
+
+	d = p_1;
+}
+
+bool TestSPP(uint64_t p, uint64_t a, uint64_t d, uint64_t s) {
+	uint64_t a_mod = mod_step(a, d, p);
+
+	if (a_mod == 1 || a_mod == p - 1) {
+		return 1;
+	}
+
+	for (uint64_t r = 0; r < s - 1; ++r) {
+
+		a_mod = mul_mod(a_mod, a_mod, p);
+
+		if (a_mod == p - 1) {
+			return 1;
+		}
+		if (a_mod == 1) {
+			return 0;
+		}
+	}
+
+	return 0;
+}
+
+bool MillerRabin(uint64_t p, int k) {
+	if (p < 2)
+		return 0;
+
+	if (p == 2 || p == 3)
+		return 1;
+
+	if (p % 2 == 0)
+		return 0;
+
+	uint64_t d, s;
+
+	step2(p, d, s);
+
+	random_device rd;
+	mt19937_64 gen(rd());
+	uniform_int_distribution<uint64_t> dis(2, p - 2);
+
+	for (int i = 0; i < k; ++i) {
+		uint64_t x = dis(gen);
+
+		if (gcd(x, p) > 1) {
+			return 0;
+		}
+
+		if (!TestSPP(p, x, d, s)) {
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
+// Метод пробних ділень
+uint64_t TrialDivision(uint64_t n) {
+	const int primes[] = { 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47 };
+	for (int p : primes) {
+		if (n % p == 0) {
+			return p;
+		}
+	}
+	return 1;
+}
+
+// р-метод Полларда (модифікація Флойда)
+uint64_t PollardRho(uint64_t n) {
+	uint64_t x0 = 2;
+
+	while (x0 < n) {
+		uint64_t x = x0;
+		uint64_t y = x0;
+		uint64_t d = 1;
+
+		while (d == 1) {
+			x = (mul_mod(x, x, n) + 1) % n;
+			y = (mul_mod(y, y, n) + 1) % n;
+			y = (mul_mod(y, y, n) + 1) % n;
+
+			uint64_t diff = x > y ? x - y : y - x;
+			d = gcd(diff, n);
+		}
+
+		if (d != n) {
+			return d;
+		}
+
+		x0++;
+	}
+
+	return 0;
+}
+
+void logDivisor(uint64_t divisor, const string& method,
+	const time_point<high_resolution_clock>& start)
+{
+	auto now = high_resolution_clock::now();
+	auto elapsed = duration_cast<milliseconds>(now - start).count();
+
+	cout << "Divisor: " << divisor
+		<< " | Method: " << method
+		<< " | Time: " << elapsed << " ms" << endl;
+}
+
+void Factorize(uint64_t n, vector<uint64_t>& result,
+	const time_point<high_resolution_clock>& start)
+{
+	if (n <= 1) return;
+
+	// 3а
+	if (MillerRabin(n, 20)) {
+		result.push_back(n);
+		return;
+	}
+
+	// 3б
+	uint64_t d = TrialDivision(n);
+	if (d != 1) {
+		logDivisor(d, "Trial Division", start);
+		result.push_back(d);
+		Factorize(n / d, result, start);
+		return;
+	}
+
+	// 3в
+	d = PollardRho(n);
+	if (d != 0) {
+		logDivisor(d, "Pollard Rho", start);
+		Factorize(d, result, start);
+		Factorize(n / d, result, start);
+		return;
+	}
+
+	cout << "Cannot find canonical decomposition :(" << endl;
+}
