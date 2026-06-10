@@ -130,6 +130,7 @@
     <ClInclude Include="header.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BruteForce.cpp" />
     <ClCompile Include="Canonical.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>

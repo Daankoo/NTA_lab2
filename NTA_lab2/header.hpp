@@ -28,3 +28,6 @@ uint64_t PollardRho(uint64_t n);
 // Canonical
 void Factorize(uint64_t n, vector<uint64_t>& result);
 map<uint64_t, int> canonical_decomposition(uint64_t n);
+
+// BruteForce.cpp
+int64_t brute_force(uint64_t alpha, uint64_t beta, uint64_t p);
