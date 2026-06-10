@@ -149,45 +149,39 @@ uint64_t PollardRho(uint64_t n) {
 	return 0;
 }
 
-void logDivisor(uint64_t divisor, const string& method,
-	const time_point<high_resolution_clock>& start)
-{
-	auto now = high_resolution_clock::now();
-	auto elapsed = duration_cast<milliseconds>(now - start).count();
-
-	cout << "Divisor: " << divisor
-		<< " | Method: " << method
-		<< " | Time: " << elapsed << " ms" << endl;
-}
-
-void Factorize(uint64_t n, vector<uint64_t>& result,
-	const time_point<high_resolution_clock>& start)
-{
+void Factorize(uint64_t n, vector<uint64_t>& result) {
 	if (n <= 1) return;
 
-	// 3а
+	// Просте число — кладемо в результат
 	if (MillerRabin(n, 20)) {
 		result.push_back(n);
 		return;
 	}
 
-	// 3б
+	// Пробні ділення
 	uint64_t d = TrialDivision(n);
 	if (d != 1) {
-		logDivisor(d, "Trial Division", start);
 		result.push_back(d);
-		Factorize(n / d, result, start);
+		Factorize(n / d, result);
 		return;
 	}
 
-	// 3в
+	// р-метод Полларда
 	d = PollardRho(n);
 	if (d != 0) {
-		logDivisor(d, "Pollard Rho", start);
-		Factorize(d, result, start);
-		Factorize(n / d, result, start);
+		Factorize(d, result);
+		Factorize(n / d, result);
 		return;
 	}
 
 	cout << "Cannot find canonical decomposition :(" << endl;
+}
+
+map<uint64_t, int> canonical_decomposition(uint64_t n) {
+	vector<uint64_t> factors;
+	Factorize(n, factors);
+
+	map<uint64_t, int> canonical;
+	for (auto p : factors) canonical[p]++;
+	return canonical;
 }
