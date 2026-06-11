@@ -1,6 +1,6 @@
 #include "header.hpp"
 
-// Китайся теорема
+// Китайська теорема
 uint64_t crt(vector<pair<uint64_t, uint64_t>>& congruences, uint64_t n) {
 	uint64_t x = 0;
 
@@ -20,7 +20,7 @@ uint64_t crt(vector<pair<uint64_t, uint64_t>>& congruences, uint64_t n) {
 
 
 uint64_t solve_for_prime(uint64_t a, uint64_t b, uint64_t p, uint64_t n, uint64_t prime, int exp) {
-	// Будуємо таблицю: table[j] = alpha^(n*j/prime) mod p
+	// Будуємо таблицю: table[j] = a^(n*j/prime) mod p
 	vector<uint64_t> table(prime);
 	uint64_t base = mod_step(a, n / prime, p);
 	table[0] = 1;
@@ -35,7 +35,7 @@ uint64_t solve_for_prime(uint64_t a, uint64_t b, uint64_t p, uint64_t n, uint64_
 	for (int k = 0; k < exp; ++k) {
 		pk = (k == 0) ? 1 : pk * prime;
 
-		// Ліва частина: (beta * gamma)^(n / prime^(k+1)) mod p
+		// Ліва частина: (b * gamma)^(n / prime^(k+1)) mod p
 		uint64_t lhs = mul_mod(b, gamma, p);
 		lhs = mod_step(lhs, n / (pk * prime), p);
 
@@ -50,10 +50,37 @@ uint64_t solve_for_prime(uint64_t a, uint64_t b, uint64_t p, uint64_t n, uint64_
 
 		yi += xk * pk;
 
-		// Оновлюємо gamma = alpha^(-yi) mod p
+		// Оновлюємо gamma = a^(-yi) mod p
 		uint64_t inv_pk = mod_step(a_inv, pk * xk, p);
 		gamma = mul_mod(gamma, inv_pk, p);
 	}
 
 	return yi;
+}
+
+// Алгоритм Сілвера-Поліга-Геллмана
+
+uint64_t sph(uint64_t a, uint64_t b, uint64_t p) {
+	uint64_t n = p - 1;
+
+	map<uint64_t, int> factors = canonical_decomposition(n);
+
+	vector<pair<uint64_t, uint64_t>> congruences;
+
+	for (size_t i = 0; i < factors.size(); ++i) {
+		auto it = factors.begin();
+		advance(it, i);
+
+		uint64_t prime = it->first;
+		int      exp = it->second;
+
+		uint64_t yi = solve_for_prime(a, b, p, n, prime, exp);
+
+		uint64_t mi = 1;
+		for (int k = 0; k < exp; ++k) mi *= prime;
+
+		congruences.push_back({ yi, mi });
+	}
+
+	return crt(congruences, n);
 }
