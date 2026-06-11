@@ -13,6 +13,8 @@ using namespace std;
 
 // Operations
 uint64_t gcd(uint64_t a, uint64_t b);
+int64_t  gcd_uv(int64_t a, int64_t b, int64_t& u, int64_t& v);
+uint64_t mod_inverse(uint64_t a, uint64_t n);
 uint64_t mul_mod(uint64_t a, uint64_t b, uint64_t n);
 uint64_t mod_step(uint64_t a, uint64_t b, uint64_t n);
 

@@ -12,6 +12,31 @@ uint64_t gcd(uint64_t a, uint64_t b) {
 	return a;
 }
 
+int64_t gcd_uv(int64_t a, int64_t b, int64_t& u, int64_t& v) {
+	int64_t u0 = 1, u1 = 0;
+	int64_t v0 = 0, v1 = 1;
+	while (b != 0) {
+		int64_t q = a / b;
+		int64_t r = a % b;
+		a = b;
+		b = r;
+		int64_t u_n = u0 - q * u1;
+		int64_t v_n = v0 - q * v1;
+		u0 = u1; u1 = u_n;
+		v0 = v1; v1 = v_n;
+	}
+	u = u0;
+	v = v0;
+	return a;
+}
+
+uint64_t mod_inverse(uint64_t a, uint64_t n) {
+	int64_t u, v;
+	int64_t g = gcd_uv((int64_t)a, (int64_t)n, u, v);
+	if (g != 1) return 0; // оберненого не існує
+	return (uint64_t)((u % (int64_t)n + (int64_t)n) % (int64_t)n);
+}
+
 uint64_t mul_mod(uint64_t a, uint64_t b, uint64_t n) {
 	uint64_t result = 0;
 	a %= n;
